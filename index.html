@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Document</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+    <link rel="stylesheet" type="text/css" href="css/mui.min.css" />
+</head>
+<style>
+    .mui-content {
+        overflow: hidden
+    }
+    
+    .music img {
+        max-width: 30px;
+        position: absolute;
+        right: 26px;
+        top: 16px;
+    }
+</style>
+<script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.js"></script>
+
+<body>
+    <!-- 主界面菜单同时移动 -->
+    <!-- 侧滑导航根容器 -->
+    <div class="mui-off-canvas-wrap mui-draggable">
+        <!-- 主页面容器 -->
+        <div class="mui-inner-wrap">
+            <!-- 菜单容器 -->
+            <aside class="mui-off-canvas-left" id="offCanvasSide">
+                <div class="mui-scroll-wrapper">
+                    <div class="mui-scroll">
+                        <ul class="mui-table-view ">
+
+                            <a href="http://xyfstudy.com">
+                                <li class="mui-table-view-cell">我的博客</li>
+                            </a>
+                            <li class="mui-table-view-cell">留言板</li>
+
+                        </ul>
+
+                    </div>
+                </div>
+            </aside>
+            <!-- 主页面标题 -->
+            <header class="mui-bar mui-bar-nav ">
+                <a class="mui-icon mui-action-menu mui-icon-bars mui-pull-left" href="#offCanvasSide"></a>
+                <h1 class="mui-title">ajax播放器</h1>
+            </header>
+
+            <nav class="mui-bar mui-bar-tab">
+                <ul class="mui-table-view mui-scroll">
+                    <li id="pause" class="mui-table-view-cell mui-media" style="position: relative;">
+                        <a href="javascript:;">
+                            <img id="img" class="mui-media-object mui-pull-left" src="./images/shuijiao.jpg">
+                            <div class="mui-media-body" id="bottom_list">
+                                点击播放歌曲
+                                <p class='mui-ellipsis'>mui框架</p>
+                            </div>
+                            <span class="music"><img src="images/music.svg" alt=""></span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            <!-- 主页面内容容器 -->
+            <div class="mui-content mui-scroll-wrapper  " style="top: 40px;">
+                <div class=" mui-scroll-wrapper" style="padding-bottom: 62px;">
+                    <!-- 主界面具体展示内容 -->
+                    <ul class="mui-table-view mui-scroll" id="list">
+
+                    </ul>
+                </div>
+            </div>
+            <div class="mui-off-canvas-backdrop"></div>
+        </div>
+    </div>
+    <audio id="audio" style="display: none" src="" controls="controls" autoplay="controls">
+</audio>
+    <script src="js/mui.js" type="text/javascript" charset="utf-8"></script>
+    <script type="text/javascript">
+        mui.init()
+
+        mui('.mui-scroll-wrapper').scroll({
+            deceleration: 0.0005, //flick 减速系数，系数越大，滚动速度越慢，滚动距离越小，默认值0.0006
+            indicators: false,
+            bounce: true //是否启用回弹
+        });
+
+        var rot = true;
+        var link = null;
+        var songid = null;
+        var i = 0;
+        var timer = null;
+        var audio = $("#audio")[0]
+        $.ajax({
+            url: 'http://tingapi.ting.baidu.com/v1/restserver/ting',
+            type: 'get',
+            dataType: 'jsonp',
+            data: {
+                method: 'baidu.ting.billboard.billList',
+                type: '2',
+                size: '20',
+                offset: '0'
+            },
+            success: function(data) {
+                var list = data.song_list;
+                $.each(list, function(index, data) {
+                    $li = "<li  songid=" + data.song_id + " class='mui-table-view-cell mui-media'> <a href='javascript:;'> <img class='mui-media-object mui-pull-left' src=" + data.pic_small + "></div > <div class='mui-media-body'>" + data.album_title + "<p class='mui-ellipsis'>" + data.author + "</p></div></a></li > "
+                    $("#list").append($li);
+
+                })
+
+                $("#list li").each(function(index) {
+                    $(this).on("tap click", function() {
+                        songid = $(this).attr("songid");
+                        console.log(songid)
+                        var $content = $(this).find(".mui-media-body").html();
+                        var $src = $(this).find("img").attr("src");
+                        $("#bottom_list").html('').html($content);
+                        $("#img").attr("src", $src);
+                        clearInterval(timer);
+                        i = 0;
+                        timer = setInterval(function() {
+                            i++;
+                            $(".music img").css({
+                                "transform": "rotate(" + i + "deg)",
+                                "-ms-transform": "rotate(" + i + "deg)",
+                                "moz-transform": "rotate(" + i + "deg)",
+                                "webkit-transform": "rotate(" + i + "deg)",
+                            })
+                        }, 10);
+
+                        $.ajax({
+                            url: 'http://tingapi.ting.baidu.com/v1/restserver/ting',
+                            type: 'get',
+                            dataType: 'jsonp',
+                            data: {
+                                method: 'baidu.ting.song.play',
+                                songid: songid,
+
+                            },
+                            success: function(data) {
+
+                                link = data.bitrate.show_link;
+                                console.log(link);
+                                $("audio").attr("src", '');
+                                $("audio").attr("src", link);
+
+                            },
+                            error: function() {
+                                console.log("错误")
+                            }
+
+                        })
+                    })
+
+                })
+
+
+
+
+
+
+
+            },
+            error: function(error) {
+                console.log("错误");
+            },
+        })
+
+        var mob = IsPC();
+        if (mob) {
+            dianji = "click";
+        } else {
+            dianji = "tap";
+        }
+        $("#pause").on(dianji, function() {
+
+            if (audio.paused) {
+                audio.play();
+                timer = setInterval(function() {
+                    i++;
+                    $(".music img").css({
+                        "transform": "rotate(" + i + "deg)",
+                        "-ms-transform": "rotate(" + i + "deg)",
+                        "moz-transform": "rotate(" + i + "deg)",
+                        "webkit-transform": "rotate(" + i + "deg)",
+                    })
+                }, 10);
+                return;
+            } else {
+                audio.pause();
+                clearInterval(timer);
+                i = 0;
+                $(".music img").css({
+                    "transform": "rotate(" + i + "deg)",
+                    "-ms-transform": "rotate(" + i + "deg)",
+                    "moz-transform": "rotate(" + i + "deg)",
+                    "webkit-transform": "rotate(" + i + "deg)",
+                })
+            }
+
+        })
+
+
+		mui('body').on('tap','a',function(){document.location.href=this.href;}); 
+        function IsPC() {
+            var userAgentInfo = navigator.userAgent;
+            var Agents = ["Android", "iPhone",
+                "SymbianOS", "Windows Phone",
+                "iPad", "iPod"
+            ];
+            var flag = true;
+            for (var v = 0; v < Agents.length; v++) {
+                if (userAgentInfo.indexOf(Agents[v]) > 0) {
+                    flag = false;
+                    break;
+                }
+            }
+            return flag;
+        }
+    </script>
+</body>
+
+</html>
