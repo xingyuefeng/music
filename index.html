@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8" />
-    <title>Document</title>
+    <title>music</title>
     <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
     <link rel="stylesheet" type="text/css" href="css/mui.min.css" />
 </head>
@@ -79,8 +79,8 @@
 </audio>
     <script src="js/mui.js" type="text/javascript" charset="utf-8"></script>
     <script type="text/javascript">
+    // mui
         mui.init()
-
         mui('.mui-scroll-wrapper').scroll({
             deceleration: 0.0005, //flick 减速系数，系数越大，滚动速度越慢，滚动距离越小，默认值0.0006
             indicators: false,
@@ -93,6 +93,7 @@
         var i = 0;
         var timer = null;
         var audio = $("#audio")[0]
+        // 获取歌曲列表
         $.ajax({
             url: 'http://tingapi.ting.baidu.com/v1/restserver/ting',
             type: 'get',
@@ -156,13 +157,6 @@
                     })
 
                 })
-
-
-
-
-
-
-
             },
             error: function(error) {
                 console.log("错误");
@@ -175,6 +169,7 @@
         } else {
             dianji = "tap";
         }
+        // 播放暂停样式调整
         $("#pause").on(dianji, function() {
 
             if (audio.paused) {
@@ -203,8 +198,9 @@
 
         })
 
-
+        // mui框架a都可以点
 		mui('body').on('tap','a',function(){document.location.href=this.href;}); 
+		// 判断是手机还是电脑
         function IsPC() {
             var userAgentInfo = navigator.userAgent;
             var Agents = ["Android", "iPhone",
